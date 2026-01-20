@@ -8,8 +8,8 @@ public class parkingStack<Vehicle>{
 
     public parkingStack(){
         list = new LinkedList<>();
-        capacity = 0;
-        liftNum = 0;
+        capacity = ParkingSystem.CAPACITY;
+        liftNum = ParkingSystem.LIFTNUM;
     }
     public parkingStack(int capacity, int liftNum){
         list = new LinkedList<>();

@@ -34,6 +34,9 @@ public class Vehicle {
     public void setExitTime(LocalDateTime exitTime){this.exitTime = exitTime; }
 
     public double parkingDuration(){
+        if (getEntryTime() == null || getExitTime() == null) {
+            return 0.0;
+        }
         Duration dur = Duration.between(getEntryTime(), getExitTime());
         return dur.getSeconds() / 60;
     }

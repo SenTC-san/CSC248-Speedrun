@@ -7,7 +7,7 @@ public class parkingQueue<Vehicle>{
 
     public parkingQueue(){
         list = new LinkedList<>();
-        capacity = 0;
+        capacity = ParkingSystem.CAPACITY;
     }
     public parkingQueue(int capacity){
         list = new LinkedList<>();

@@ -12,9 +12,6 @@ public class ParkingSystem {
     static parkingQueue queue = new parkingQueue(CAPACITY);
     static parkingStack stack = new parkingStack(CAPACITY,LIFTNUM);
     static parkingStack<Vehicle>[] lifts;
-    //static DateTimeFormatter f1 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-    //static DateTimeFormatter f2 = DateTimeFormatter.ofPattern("HH:mm:ss");
-
 
     public static void main(String [] args){
         startSystem();
@@ -74,6 +71,8 @@ public class ParkingSystem {
                     1. Register Vehicle
                     2. Load Vehicle
                     3. Unload Vehicle
+                    4. History
+                    5. Payment
                     0. Exit
                     ===============================
                     """;
@@ -99,7 +98,7 @@ public class ParkingSystem {
                         LoadVehicle();
                         break;
                     case 3:
-                        //UnloadVehicle();
+                        UnloadVehicle();
                         break;
                     case 0:
                         System.out.println("Thank you & Drive Safely!");
@@ -138,11 +137,36 @@ public class ParkingSystem {
             }
         }
         System.out.println("All lifts are full.");
-/*        if(!queue.isEmpty()){
-            Vehicle v = (Vehicle) queue.dequeue();
-            System.out.println("Vehicle '" + v.getPlateNumber() + "' has moved from queue.");
-            stack.push(v);
-        } */
+    }
+    public static void UnloadVehicle(){
+        System.out.print("Enter vehicle plate number: ");
+        String plateNum = sc.nextLine().trim();
+        boolean found = false;
+
+        for(int i=0; i<LIFTNUM; i++){
+            parkingStack<Vehicle> currentLift = lifts[i];
+            parkingStack<Vehicle> tempS = new parkingStack<>(CAPACITY, i);
+
+            while(!currentLift.isEmpty()){
+            Vehicle v = (Vehicle) currentLift.pop();
+
+                if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
+                    v.setExitTime(LocalDateTime.now());
+                    System.out.println("Vehicle [" + plateNum + "]found in Lift" + (i+1));
+                    Ticket t = new Ticket();
+                    t.generateTicket(v);
+                    found = true;
+                    break;
+                }else{ tempS.push(v); }
+            }
+            while(!tempS.isEmpty()){
+                currentLift.push(tempS.pop());
+            }
+            if(found){break; }
+        }
+        if(!found){
+                System.out.println("Vehicle not found.");
+        }
     }
 
     public static void printSlot(String text, int slotWidth){
