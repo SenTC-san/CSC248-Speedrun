@@ -1,15 +1,17 @@
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.Scanner;
-//
+
 public class ParkingSystem {
     static String PARKINGNAME = "King Centre parking";
-    static int CAPACITY = 10;
+    static int CAPACITY = 3;
     static int LIFTNUM = 3;
 
     static Scanner sc = new Scanner(System.in);
     static parkingQueue queue = new parkingQueue(CAPACITY);
     static parkingStack stack = new parkingStack(CAPACITY,LIFTNUM);
+    static parkingStack<Vehicle>[] lifts;
     //static DateTimeFormatter f1 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     //static DateTimeFormatter f2 = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -19,8 +21,10 @@ public class ParkingSystem {
     }
 
     public static void startSystem(){
-        System.out.println("\tWelcome to" + PARKINGNAME);
-        System.out.println("\tParking Lot: \n");
+        lifts = new parkingStack[LIFTNUM];
+        for (int i = 0; i < LIFTNUM; i++) {
+            lifts[i] = new parkingStack<>(CAPACITY, i + 1);
+        }
         menu();
     }
 
@@ -33,18 +37,22 @@ public class ParkingSystem {
         System.out.println();
 
         //Rows
-        for(int i=0; i<CAPACITY; i++){
-            if(i < queue.getQueue().size()){
-                Vehicle v = (Vehicle) queue.getQueue().get(i);
+        for(int r=0; r<CAPACITY; r++){
+
+            //Queue column
+            if(r < queue.getQueue().size()){
+                Vehicle v = (Vehicle) queue.getQueue().get(r);
                 printSlot(v.getPlateNumber(), 10);
             } else
                 printSlot("",10);
             System.out.print("  |  ");
         
             //Lifts
-            for(int j=0; j<LIFTNUM; j++){
-                if(i < stack.getStack().size()){
-                    Vehicle v = (Vehicle) stack.getStack().get(i);
+            for(int l=0; l<LIFTNUM; l++){
+                LinkedList<Vehicle> slist = lifts[l].getStack();
+                int indexFromTop = slist.size() - 1 - r; 
+                if(indexFromTop >= 0 && indexFromTop < slist.size()){
+                    Vehicle v = slist.get(indexFromTop);
                     printSlot(v.getPlateNumber(), 10);
                 } else
                     printSlot("",10);
@@ -57,8 +65,9 @@ public class ParkingSystem {
     public static void menu(){
         int selection;
         boolean valid;
-        do{
-            clearScreen();
+        do{ 
+            System.out.println("\tWelcome to " + PARKINGNAME);
+            //System.out.println("Parking Lot:");
             visualiser();
             String menu = """
                     \n========== MAIN MENU ==========
@@ -100,6 +109,8 @@ public class ParkingSystem {
                        System.out.println("Invalid Option!");
                        break;
             }
+            waitForKey();
+            clearScreen();
         }while (valid);
     }
 
@@ -114,11 +125,24 @@ public class ParkingSystem {
         }
     }
     public static void LoadVehicle(){
-        if(!queue.isEmpty()){
+        if (queue.isEmpty()) {
+            System.out.println("Queue is empty.");
+            return;
+        }
+        for(int i=0; i<LIFTNUM; i++){
+            if(!lifts[i].isFull()){
+                Vehicle v = (Vehicle) queue.dequeue();
+                lifts[i].push(v);
+                System.out.println(v.getPlateNumber() + " moved to Lift " + (i+1));
+                return;
+            }
+        }
+        System.out.println("All lifts are full.");
+/*        if(!queue.isEmpty()){
             Vehicle v = (Vehicle) queue.dequeue();
             System.out.println("Vehicle '" + v.getPlateNumber() + "' has moved from queue.");
             stack.push(v);
-        }
+        } */
     }
 
     public static void printSlot(String text, int slotWidth){
@@ -143,6 +167,10 @@ public class ParkingSystem {
         System.out.print("]");
     }
 
+    public static void waitForKey(){
+        System.out.println("\nPress ENTER to continue...");
+        sc.nextLine();
+    }
     // Sadia. (2011, February 2). How to clear the console using Java? Stack Overflow. https://stackoverflow.com/questions/2979383/how-to-clear-the-console-using-java/
     public static void clearScreen() { //apparently the previous clear screen does not work with windows cmd prompt, this one works with any
     try {
