@@ -22,7 +22,7 @@ public class Vehicle {
     }
 
     public Vehicle(int vehicleID, String plateNumber, LocalDateTime entryTime, LocalDateTime exitTime){
-        this.vehicleID = vehicleID;
+        this.vehicleID = ++vehicleID;
         this.plateNumber = plateNumber;
         this.entryTime = entryTime;
         this.exitTime = exitTime;
