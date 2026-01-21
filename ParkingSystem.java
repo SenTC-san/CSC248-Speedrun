@@ -79,7 +79,7 @@ public class ParkingSystem {
                         VehicleHistory(historyList);
                         break;
                     case 5:
-                        LotDetails();
+                        //LotDetails();
                     case 0:
                         System.out.println("Thank you & Drive Safely!");
                         valid = false;
@@ -216,7 +216,7 @@ public class ParkingSystem {
         Vehicle v = new Vehicle();
         historyList = v.toFileRead();
         for (Receipt h: historyList){
-            
+
         }
     }
 
