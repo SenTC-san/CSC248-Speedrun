@@ -79,7 +79,7 @@ public class ParkingSystem {
                         VehicleHistory(historyList);
                         break;
                     case 5:
-                        //LotDetails();
+                        LotDetails(historyList);
                     case 0:
                         System.out.println("Thank you & Drive Safely!");
                         valid = false;
@@ -203,21 +203,59 @@ public class ParkingSystem {
         Vehicle v = new Vehicle();
         historyList = v.toFileRead();
         for (Receipt h: historyList){
-            System.out.printf("=========================================================================================%n");
-            System.out.printf("|                               RECEIPT ID : %-5d                                      |%n", (h.getReceiptID()-1));
-            System.out.printf("=========================================================================================%n");
-            System.out.printf("| Vehicle ID | Plate Number |     Entry Time        |      Exit Time        | Total Fee |%n");
-            System.out.printf("| %-10d | %-12s | %-21s | %-21s | %7.2f   |%n" , (h.getVehicle().getVehicleID()-1), h.getVehicle().getPlateNumber(), f1.format(h.getVehicle().getEntryTime()), f1.format(h.getVehicle().getExitTime()), h.getTotalPayment());
-            System.out.printf("=========================================================================================%n");
+            System.out.printf("| RECEIPT ID | Vehicle ID | Plate Number |     Entry Time       |      Exit Time       | Total Fee |%n");
+            System.out.printf("| %-10d |%-11d | %-12s | %-20s | %-20s | %7.2f   |%n%n" , (h.getReceiptID()-1), (h.getVehicle().getVehicleID()-1), h.getVehicle().getPlateNumber(), f1.format(h.getVehicle().getEntryTime()), f1.format(h.getVehicle().getExitTime()), h.getTotalPayment());
         } 
     }
 
     public static void LotDetails(LinkedList <Receipt> historyList){
         Vehicle v = new Vehicle();
         historyList = v.toFileRead();
-        for (Receipt h: historyList){
+        int totalReceipt = 0;
+        double totalRevenue = 0.0;
+        double avgRevenue = 0.0;
+        int zcParking = 0;
+        int peakHour = 0;
+        double Duration = 0;
+        double avgDuration = 0;
+        int[] hourCount = new int[24];
 
+        for (Receipt h: historyList){
+            if(h.getReceiptID() > 10000){totalReceipt++; }
+            totalRevenue += h.getTotalPayment();
+            if(!(h.getTotalPayment() > 0.0)){ zcParking++; }
+            
+            int hour = h.getVehicle().getEntryTime().getHour();
+            hourCount[hour]++;
+            Duration += h.getVehicle().parkingDuration();
         }
+        //count average revenue
+        if(totalReceipt > 0){ avgRevenue = totalRevenue/totalReceipt; }
+        //count average duration
+        if(Duration > 0){ avgDuration = Duration/totalReceipt; }
+
+        //count the peak hour
+        int maxVehicles = hourCount[0];
+        for (int h = 1; h < 24; h++) {
+            if (hourCount[h] > maxVehicles) {
+                maxVehicles = hourCount[h];
+                peakHour = h;
+            }
+        }
+        int startHour = peakHour;
+        int endHour = peakHour;
+
+        System.out.printf("=====================================%n");
+        System.out.printf("         PARKING LOT SUMMARY         %n");
+        System.out.printf("=====================================%n");
+        System.out.printf("Total Receipts       : %-15d%n", totalReceipt);
+        System.out.printf("Total Revenue        : %-15.2f%n", totalRevenue);
+        System.out.printf("Total Parking Time   : %-15.2f%n", Duration);
+        System.out.printf("Average Revenue      : %-15.2f%n", avgRevenue);
+        System.out.printf("Average Parking Time : %-15.2f%n", avgDuration);
+        System.out.printf("Zero-Cost Parking Fee: %-15d%n", zcParking);
+        System.out.printf("Peak Hour            : %02d:00 - %02d:59%n", startHour, endHour);
+        System.out.printf("=====================================%n");
     }
 
     public static void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
