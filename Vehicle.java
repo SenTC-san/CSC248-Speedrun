@@ -38,7 +38,22 @@ public class Vehicle {
             return 0.0;
         }
         Duration dur = Duration.between(getEntryTime(), getExitTime());
-        return dur.getSeconds() / 60;
+        return dur.getSeconds() / 60; //coverts to minutes
+    }
+    public double calcTotal(){
+        double total = (parkingDuration() / 60) * ParkingSystem.RATEPERHOUR;
+        return total;
+    }
+    public static String toFileWrite(Vehicle v){
+        return  v.getVehicleID() + ";" +
+                v.getPlateNumber() + ";" +
+                v.getExitTime() + ";" +
+                String.format("%.2f",t.getLength()) + ";" +
+                String.format("%.2f",t.getWidth()) + ";" +
+                String.format("%.2f", t.getTotalCost()) + ";" +
+                t.getRecipient() + ";" +
+                t.getInvoiceNum() + ";" +
+                t.getDate().format(formatter) + "\n" ;
     }
 }
 

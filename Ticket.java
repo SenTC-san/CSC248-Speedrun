@@ -19,22 +19,22 @@ public class Ticket {
     public int getTicketID(){return ticketID; }
     public void setTicketID(int ticketID){this.ticketID = ticketID; }
 
-    public void generateTicket(Vehicle v){
+    public void generateTicket(Vehicle v, boolean pay){
         System.out.printf("%n");
         System.out.printf("====================================%n");
         System.out.printf("        %s%n", ParkingSystem.PARKINGNAME);
-        System.out.printf("         PARKING RECEIPT%n");
+        System.out.printf("          PARKING RECEIPT           %n");
         System.out.printf("====================================%n");
+        System.out.printf("Vehicle ID     : %-15s%n", v.getVehicleID());
         System.out.printf("Plate Number   : %-15s%n", v.getPlateNumber());
-        //System.out.printf("Vehicle Type   : %-15s%n", vehicleType);
         System.out.printf("Entry Time     : %-15s%n", f1.format(v.getEntryTime()));
         System.out.printf("Exit Time      : %-15s%n", f1.format(v.getExitTime()));
         System.out.printf("Duration       : %-5.2f minute(s)%n", v.parkingDuration());
-    /*    System.out.printf("------------------------------------%n");
-        System.out.printf("Rate / Hour    : RM %6.2f%n", ratePerHour);
-        System.out.printf("Total Payment  : RM %6.2f%n", totalAmount); */
+        System.out.printf("------------------------------------%n");
+        System.out.println("Rate / Hour    : " + (pay? "RM" + String.format("%.2f",ParkingSystem.RATEPERHOUR):"N/A"));
+        System.out.println("Total Payment  : " + (pay? "RM" + String.format("%.2f",v.calcTotal()):"N/A"));
         System.out.printf("====================================%n");
-        System.out.printf("    Thank you & Drive Safely!%n");
+        System.out.printf("     Thank you & Drive Safely!      %n");
         System.out.printf("====================================%n");
     }
 }

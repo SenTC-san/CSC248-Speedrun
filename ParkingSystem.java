@@ -4,25 +4,149 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 public class ParkingSystem {
+    //quick program changes : name, capacity, payment rate
     static String PARKINGNAME = "King Centre parking";
     static int CAPACITY = 3;
     static int LIFTNUM = 3;
-
-    static Scanner sc = new Scanner(System.in);
-    static parkingQueue queue = new parkingQueue(CAPACITY);
-    static parkingStack stack = new parkingStack(CAPACITY,LIFTNUM);
-    static parkingStack<Vehicle>[] lifts;
+    static double RATEPERHOUR = 4.0;
 
     public static void main(String [] args){
-        startSystem();
-    }
-
-    public static void startSystem(){
+        
+        Scanner sc = new Scanner(System.in);
+        parkingQueue<Vehicle> queue = new parkingQueue(CAPACITY);
+        parkingStack<Vehicle>[] lifts;
         lifts = new parkingStack[LIFTNUM];
         for (int i = 0; i < LIFTNUM; i++) {
             lifts[i] = new parkingStack<>(CAPACITY, i + 1);
         }
-        menu();
+        startSystem(sc, queue, lifts);
+    }
+
+    public static void startSystem(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+        int selection;
+        boolean valid;
+        do{ 
+            System.out.println("\tWelcome to " + PARKINGNAME);
+            //System.out.println("Parking Lot:");
+            visualiser();
+            String menu = """
+                    \n========== MAIN MENU ==========
+                    1. Register Vehicle
+                    2. Load Vehicle
+                    3. Unload Vehicle
+                    4. View Vehicle History
+                    5. Parking Lot Details
+                    0. Exit
+                    ===============================
+                    """;
+            System.out.print(menu);
+            System.out.print("Enter option: ");
+            String input = sc.nextLine();
+
+            if(input == null){ return; }
+                else{ valid = true; }
+                try{
+                    selection = Integer.parseInt(input);
+                }
+                catch (NumberFormatException e){
+                    System.out.println("Invalid input! Please enter a number.");
+                    continue;
+                }
+
+            switch(selection){
+                    case 1:
+                        RegisterVehicle(sc, queue, lifts);
+                        break;
+                    case 2:
+                        LoadVehicle(sc, queue, lifts);
+                        break;
+                    case 3:
+                        UnloadVehicle(sc, queue, lifts);
+                        break;
+                    case 4:
+                        History();
+                        break;
+                    case 0:
+                        System.out.println("Thank you & Drive Safely!");
+                        valid = false;
+                        break;
+                    default:    
+                       System.out.println("Invalid Option!");
+                       break;
+            }
+            waitForKey();
+            clearScreen();
+        }while (valid);
+    }
+
+    public static void RegisterVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+        System.out.print("Enter vehicle plate number: ");
+        String plateNum = sc.nextLine().toUpperCase();
+        Vehicle v = new Vehicle(plateNum, LocalDateTime.now() ,null);
+        if(queue.enqueue(v)){
+            System.out.println("Vehicle has entered queue.");
+        } else {
+            System.out.println("Queue is full!");
+        }
+    }
+    public static void LoadVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+        if (queue.isEmpty()) {
+            System.out.println("Queue is empty.");
+            return;
+        }
+        for(int i=0; i<LIFTNUM; i++){
+            if(!lifts[i].isFull()){
+                Vehicle v = (Vehicle) queue.dequeue();
+                lifts[i].push(v);
+                System.out.println(v.getPlateNumber() + " moved to Lift " + (i+1));
+                return;
+            }
+        }
+        System.out.println("All lifts are full.");
+    }
+    public static void UnloadVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+        System.out.print("Enter vehicle plate number: ");
+        String plateNum = sc.nextLine().trim();
+        boolean found = false;
+
+        for(int i=0; i<LIFTNUM; i++){
+            parkingStack<Vehicle> currentLift = lifts[i];
+            parkingStack<Vehicle> tempS = new parkingStack<>(CAPACITY, i);
+
+            while(!currentLift.isEmpty()){
+            Vehicle v = (Vehicle) currentLift.pop();
+
+                if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
+                    v.setExitTime(LocalDateTime.now());
+                    System.out.println("Vehicle [" + plateNum + "]found in Lift" + (i+1));
+                    Ticket t = new Ticket();
+                    t.generateTicket(v,true);
+                    found = true;
+                    break;
+                }else{ tempS.push(v); }
+            }
+            while(!tempS.isEmpty()){
+                currentLift.push(tempS.pop());
+            }
+            if(found){break; }
+        }
+        if(!found){
+            parkingQueue<Vehicle> tempQ = new parkingQueue<>(CAPACITY);
+            while(!queue.getQueue().isEmpty()){
+                Vehicle v = (Vehicle) queue.dequeue();
+                if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
+                    v.setExitTime(LocalDateTime.now());
+                    System.out.println("Vehicle [" + plateNum + "]found in Queue" );
+                    Ticket t = new Ticket();
+                    t.generateTicket(v, false);
+                }
+                System.out.println("Vehicle not found.");
+            }
+        } 
+    }
+    public static void History(){
+
+        return;
     }
 
     public static void visualiser(){
@@ -59,116 +183,6 @@ public class ParkingSystem {
         }
     }
 
-    public static void menu(){
-        int selection;
-        boolean valid;
-        do{ 
-            System.out.println("\tWelcome to " + PARKINGNAME);
-            //System.out.println("Parking Lot:");
-            visualiser();
-            String menu = """
-                    \n========== MAIN MENU ==========
-                    1. Register Vehicle
-                    2. Load Vehicle
-                    3. Unload Vehicle
-                    4. History
-                    5. Payment
-                    0. Exit
-                    ===============================
-                    """;
-            System.out.print(menu);
-            System.out.print("Enter option: ");
-            String input = sc.nextLine();
-
-            if(input == null){ return; }
-                else{ valid = true; }
-                try{
-                    selection = Integer.parseInt(input);
-                }
-                catch (NumberFormatException e){
-                    System.out.println("Invalid input! Please enter a number.");
-                    continue;
-                }
-
-            switch(selection){
-                    case 1:
-                        RegisterVehicle();
-                        break;
-                    case 2:
-                        LoadVehicle();
-                        break;
-                    case 3:
-                        UnloadVehicle();
-                        break;
-                    case 0:
-                        System.out.println("Thank you & Drive Safely!");
-                        valid = false;
-                        break;
-                    default:    
-                       System.out.println("Invalid Option!");
-                       break;
-            }
-            waitForKey();
-            clearScreen();
-        }while (valid);
-    }
-
-    public static void RegisterVehicle(){
-        System.out.print("Enter vehicle plate number: ");
-        String plateNum = sc.nextLine();
-        Vehicle v = new Vehicle(plateNum, LocalDateTime.now() ,null);
-        if(queue.enqueue(v)){
-            System.out.println("Vehicle is in queue.");
-        } else {
-            System.out.println("Queue is full!");
-        }
-    }
-    public static void LoadVehicle(){
-        if (queue.isEmpty()) {
-            System.out.println("Queue is empty.");
-            return;
-        }
-        for(int i=0; i<LIFTNUM; i++){
-            if(!lifts[i].isFull()){
-                Vehicle v = (Vehicle) queue.dequeue();
-                lifts[i].push(v);
-                System.out.println(v.getPlateNumber() + " moved to Lift " + (i+1));
-                return;
-            }
-        }
-        System.out.println("All lifts are full.");
-    }
-    public static void UnloadVehicle(){
-        System.out.print("Enter vehicle plate number: ");
-        String plateNum = sc.nextLine().trim();
-        boolean found = false;
-
-        for(int i=0; i<LIFTNUM; i++){
-            parkingStack<Vehicle> currentLift = lifts[i];
-            parkingStack<Vehicle> tempS = new parkingStack<>(CAPACITY, i);
-
-            while(!currentLift.isEmpty()){
-            Vehicle v = (Vehicle) currentLift.pop();
-
-                if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
-                    v.setExitTime(LocalDateTime.now());
-                    System.out.println("Vehicle [" + plateNum + "]found in Lift" + (i+1));
-                    Ticket t = new Ticket();
-                    t.generateTicket(v);
-                    found = true;
-                    break;
-                }else{ tempS.push(v); }
-            }
-            while(!tempS.isEmpty()){
-                currentLift.push(tempS.pop());
-            }
-            if(found){break; }
-        }
-        if(!found){
-                System.out.println("Vehicle not found.");
-        }
-    }
-
     public static void printSlot(String text, int slotWidth){
         if(text.length() > slotWidth){
             text = text.substring(0, slotWidth);
@@ -192,7 +206,7 @@ public class ParkingSystem {
     }
 
     public static void waitForKey(){
-        System.out.println("\nPress ENTER to continue...");
+        System.out.print("\nPress ENTER to continue...");
         sc.nextLine();
     }
     // Sadia. (2011, February 2). How to clear the console using Java? Stack Overflow. https://stackoverflow.com/questions/2979383/how-to-clear-the-console-using-java/
