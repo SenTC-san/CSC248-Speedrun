@@ -40,20 +40,15 @@ public class Vehicle {
         Duration dur = Duration.between(getEntryTime(), getExitTime());
         return dur.getSeconds() / 60; //coverts to minutes
     }
-    public double calcTotal(){
-        double total = (parkingDuration() / 60) * ParkingSystem.RATEPERHOUR;
+    public double calcTotal(double RATEPERHOUR){
+        double total = (parkingDuration() / 60) * RATEPERHOUR;
         return total;
     }
-/*    public static String toFileWrite(Vehicle v){
+    public static String toFileWrite(Vehicle v){
         return  v.getVehicleID() + ";" +
                 v.getPlateNumber() + ";" +
-                v.getExitTime() + ";" +
-                String.format("%.2f",t.getLength()) + ";" +
-                String.format("%.2f",t.getWidth()) + ";" +
-                String.format("%.2f", t.getTotalCost()) + ";" +
-                t.getRecipient() + ";" +
-                t.getInvoiceNum() + ";" +
-                t.getDate().format(formatter) + "\n" ;
-    } */
+                v.getEntryTime() + ";" +
+                v.getExitTime() + ";" + "\n" ;
+    } 
 }
 

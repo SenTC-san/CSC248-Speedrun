@@ -6,11 +6,6 @@ public class parkingStack<Vehicle>{
     private int capacity;
     private int liftNum;
 
-    public parkingStack(){
-        list = new LinkedList<>();
-        capacity = ParkingSystem.CAPACITY;
-        liftNum = ParkingSystem.LIFTNUM;
-    }
     public parkingStack(int capacity, int liftNum){
         list = new LinkedList<>();
         this.capacity = capacity;

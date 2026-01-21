@@ -5,10 +5,6 @@ public class parkingQueue<Vehicle>{
     private LinkedList<Vehicle> list;
     private int capacity;
 
-    public parkingQueue(){
-        list = new LinkedList<>();
-        capacity = ParkingSystem.CAPACITY;
-    }
     public parkingQueue(int capacity){
         list = new LinkedList<>();
         this.capacity = capacity;
@@ -38,6 +34,4 @@ public class parkingQueue<Vehicle>{
     public boolean isFull(){
         return list.size() >= capacity;
     }
-
-    //getSize() :int
 }

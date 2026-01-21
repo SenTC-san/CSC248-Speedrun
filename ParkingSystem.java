@@ -4,31 +4,35 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 public class ParkingSystem {
-    //quick program changes : name, capacity, payment rate
-    static String PARKINGNAME = "King Centre parking";
-    static int CAPACITY = 3;
-    static int LIFTNUM = 3;
-    static double RATEPERHOUR = 4.0;
-
     public static void main(String [] args){
-        
+        //quick program changes data : name, capacity, payment rate
+        String PARKINGNAME = "King Centre parking";
+        int CAPACITY = 3;
+        int LIFTNUM = 3;
+        double RATEPERHOUR = 4.0;
+        Object[] data = {PARKINGNAME, CAPACITY, CAPACITY, RATEPERHOUR};
+        DataProcessor dp = new DataProcessor(data);
+
         Scanner sc = new Scanner(System.in);
         parkingQueue<Vehicle> queue = new parkingQueue(CAPACITY);
         parkingStack<Vehicle>[] lifts;
         lifts = new parkingStack[LIFTNUM];
+
         for (int i = 0; i < LIFTNUM; i++) {
             lifts[i] = new parkingStack<>(CAPACITY, i + 1);
         }
-        startSystem(sc, queue, lifts);
+
+        startSystem(sc, queue, lifts, dp);
     }
 
-    public static void startSystem(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+    public static void startSystem(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int selection;
         boolean valid;
+        String PARKINGNAME = (String) dp.dataAtIndex(0);
         do{ 
             System.out.println("\tWelcome to " + PARKINGNAME);
             //System.out.println("Parking Lot:");
-            visualiser(queue, lifts);
+            visualiser(queue, lifts, dp);
             String menu = """
                     \n========== MAIN MENU ==========
                     1. Register Vehicle
@@ -58,10 +62,10 @@ public class ParkingSystem {
                         RegisterVehicle(sc, queue, lifts);
                         break;
                     case 2:
-                        LoadVehicle(queue, lifts);
+                        LoadVehicle(queue, lifts, dp);
                         break;
                     case 3:
-                        UnloadVehicle(sc, queue, lifts);
+                        UnloadVehicle(sc, queue, lifts, dp);
                         break;
                     case 4:
                         VehicleHistory();
@@ -89,7 +93,8 @@ public class ParkingSystem {
             System.out.println("Queue is full!");
         }
     }
-    public static void LoadVehicle(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+    public static void LoadVehicle(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
+        int LIFTNUM = (int) dp.dataAtIndex(2);
         if (queue.isEmpty()) {
             System.out.println("Queue is empty.");
             return;
@@ -104,7 +109,9 @@ public class ParkingSystem {
         }
         System.out.println("All lifts are full.");
     }
-    public static void UnloadVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+    public static void UnloadVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
+        int LIFTNUM = (int) dp.dataAtIndex(2);
+        int CAPACITY = (int) dp.dataAtIndex(1);
         System.out.print("Enter vehicle plate number: ");
         String plateNum = sc.nextLine().trim();
         boolean found = false;
@@ -119,8 +126,8 @@ public class ParkingSystem {
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Lift" + (i+1));
-                    Ticket t = new Ticket();
-                    t.generateTicket(v,true);
+                    Receipt t = new Receipt(v);
+                    t.generateReceipt(true, dp);
                     found = true;
                     break;
                 }else{ tempS.push(v); }
@@ -138,8 +145,8 @@ public class ParkingSystem {
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Queue" );
-                    Ticket t = new Ticket();
-                    t.generateTicket(v, false);
+                    Receipt r = new Receipt(v);
+                    r.generateReceipt(false, dp);
                     found = true;
                     break;
                 }else{ tempQ.enqueue(v); }
@@ -155,7 +162,9 @@ public class ParkingSystem {
         return;
     }
 
-    public static void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+    public static void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
+        int LIFTNUM = (int) dp.dataAtIndex(2);
+        int CAPACITY = (int) dp.dataAtIndex(1);
         //Header
         System.out.print("   Queue      |     ");
         for (int l = 1; l <= LIFTNUM; l++){
