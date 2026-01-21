@@ -80,6 +80,7 @@ public class ParkingSystem {
                         break;
                     case 5:
                         LotDetails(historyList);
+                        break;
                     case 0:
                         System.out.println("Thank you & Drive Safely!");
                         valid = false;
