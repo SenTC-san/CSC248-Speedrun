@@ -1,31 +1,39 @@
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.Scanner;
 
 public class ParkingSystem {
     public static void main(String [] args){
+
+        //---------------------------------------------------------
         //quick program changes data : name, capacity, payment rate
         String PARKINGNAME = "King Centre parking";
         int CAPACITY = 3;
         int LIFTNUM = 3;
         double RATEPERHOUR = 4.0;
+        //----------------------------------------------------------
+
         Object[] data = {PARKINGNAME, CAPACITY, CAPACITY, RATEPERHOUR};
         DataProcessor dp = new DataProcessor(data);
 
         Scanner sc = new Scanner(System.in);
+        LinkedList<Receipt> historyList = new LinkedList<>();
         parkingQueue<Vehicle> queue = new parkingQueue(CAPACITY);
-        parkingStack<Vehicle>[] lifts;
-        lifts = new parkingStack[LIFTNUM];
+        parkingStack<Vehicle>[] lifts = new parkingStack[LIFTNUM];
+
+        Vehicle v = new Vehicle();
+        historyList = v.toFileRead(); //access history file data
 
         for (int i = 0; i < LIFTNUM; i++) {
             lifts[i] = new parkingStack<>(CAPACITY, i + 1);
         }
 
-        startSystem(sc, queue, lifts, dp);
+        startSystem(sc, historyList, queue, lifts, dp);
     }
 
-    public static void startSystem(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
+    public static void startSystem(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int selection;
         boolean valid;
         String PARKINGNAME = (String) dp.dataAtIndex(0);
@@ -59,17 +67,19 @@ public class ParkingSystem {
 
             switch(selection){
                     case 1:
-                        RegisterVehicle(sc, queue, lifts);
+                        RegisterVehicle(sc, historyList, queue, lifts);
                         break;
                     case 2:
                         LoadVehicle(queue, lifts, dp);
                         break;
                     case 3:
-                        UnloadVehicle(sc, queue, lifts, dp);
+                        UnloadVehicle(sc, historyList, queue, lifts, dp);
                         break;
                     case 4:
-                        VehicleHistory();
+                        VehicleHistory(historyList);
                         break;
+                    case 5:
+                        LotDetails();
                     case 0:
                         System.out.println("Thank you & Drive Safely!");
                         valid = false;
@@ -83,18 +93,30 @@ public class ParkingSystem {
         }while (valid);
     }
 
-    public static void RegisterVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+    //Operation 1: Register Vehicle
+    public static void RegisterVehicle(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){ 
         System.out.print("Enter vehicle plate number: ");
         String plateNum = sc.nextLine().toUpperCase();
-        Vehicle v = new Vehicle(plateNum, LocalDateTime.now() ,null);
+
+        int highestID = 1000;
+        for(Receipt r :historyList){
+            if(r.getVehicle().getVehicleID() > highestID){
+                highestID = r.getVehicle().getVehicleID();
+            }
+        }
+        Vehicle v = new Vehicle(highestID, plateNum, LocalDateTime.now() ,null);
+
         if(queue.enqueue(v)){
             System.out.println("Vehicle has entered queue.");
         } else {
             System.out.println("Queue is full!");
         }
     }
+
+    //Operation 2: Park Vehicle
     public static void LoadVehicle(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int LIFTNUM = (int) dp.dataAtIndex(2);
+
         if (queue.isEmpty()) {
             System.out.println("Queue is empty.");
             return;
@@ -109,9 +131,20 @@ public class ParkingSystem {
         }
         System.out.println("All lifts are full.");
     }
-    public static void UnloadVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
+
+    //Operation 3: Unpark Vehicle
+    public static void UnloadVehicle(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int LIFTNUM = (int) dp.dataAtIndex(2);
         int CAPACITY = (int) dp.dataAtIndex(1);
+        double RATEPERHOUR = (double) dp.dataAtIndex(3);
+
+        int highestID = 10000;
+        for(Receipt r : historyList){
+            if(r.getReceiptID() > highestID){
+                highestID = r.getReceiptID();
+            }
+        }
+
         System.out.print("Enter vehicle plate number: ");
         String plateNum = sc.nextLine().trim();
         boolean found = false;
@@ -126,9 +159,12 @@ public class ParkingSystem {
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Lift" + (i+1));
-                    Receipt t = new Receipt(v);
-                    t.generateReceipt(true, dp);
+                    Receipt r = new Receipt(highestID, v, v.calcTotal(RATEPERHOUR), true);
+                    r.generateReceipt(dp);
                     found = true;
+
+                    v.toFileWrite(r); //file io process
+
                     break;
                 }else{ tempS.push(v); }
             }
@@ -143,11 +179,14 @@ public class ParkingSystem {
                 Vehicle v = (Vehicle) queue.dequeue();
                 
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
+                    
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Queue" );
-                    Receipt r = new Receipt(v);
-                    r.generateReceipt(false, dp);
+                    Receipt r = new Receipt(highestID, v, v.calcTotal(RATEPERHOUR), false);
+                    r.generateReceipt(dp);
                     found = true;
+                    
+                    v.toFileWrite(r); //file io process
                     break;
                 }else{ tempQ.enqueue(v); }
                 System.out.println("Vehicle not found.");
@@ -157,9 +196,28 @@ public class ParkingSystem {
             }
         }
     }
-    public static void VehicleHistory(){
-        
-        return;
+
+    //Operation 4: Vehicle History in history text file
+    public static void VehicleHistory(LinkedList <Receipt> historyList ){
+        DateTimeFormatter f1 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        Vehicle v = new Vehicle();
+        historyList = v.toFileRead();
+        for (Receipt h: historyList){
+            System.out.printf("=========================================================================================%n");
+            System.out.printf("|                               RECEIPT ID : %-5d                                      |%n", (h.getReceiptID()-1));
+            System.out.printf("=========================================================================================%n");
+            System.out.printf("| Vehicle ID | Plate Number |     Entry Time        |      Exit Time        | Total Fee |%n");
+            System.out.printf("| %-10d | %-12s | %-21s | %-21s | %7.2f   |%n" , (h.getVehicle().getVehicleID()-1), h.getVehicle().getPlateNumber(), f1.format(h.getVehicle().getEntryTime()), f1.format(h.getVehicle().getExitTime()), h.getTotalPayment());
+            System.out.printf("=========================================================================================%n");
+        } 
+    }
+
+    public static void LotDetails(LinkedList <Receipt> historyList){
+        Vehicle v = new Vehicle();
+        historyList = v.toFileRead();
+        for (Receipt h: historyList){
+            
+        }
     }
 
     public static void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
