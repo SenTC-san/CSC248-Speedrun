@@ -28,7 +28,7 @@ public class ParkingSystem {
         do{ 
             System.out.println("\tWelcome to " + PARKINGNAME);
             //System.out.println("Parking Lot:");
-            visualiser();
+            visualiser(queue, lifts);
             String menu = """
                     \n========== MAIN MENU ==========
                     1. Register Vehicle
@@ -58,13 +58,13 @@ public class ParkingSystem {
                         RegisterVehicle(sc, queue, lifts);
                         break;
                     case 2:
-                        LoadVehicle(sc, queue, lifts);
+                        LoadVehicle(queue, lifts);
                         break;
                     case 3:
                         UnloadVehicle(sc, queue, lifts);
                         break;
                     case 4:
-                        History();
+                        VehicleHistory();
                         break;
                     case 0:
                         System.out.println("Thank you & Drive Safely!");
@@ -74,7 +74,7 @@ public class ParkingSystem {
                        System.out.println("Invalid Option!");
                        break;
             }
-            waitForKey();
+            waitForKey(sc);
             clearScreen();
         }while (valid);
     }
@@ -89,7 +89,7 @@ public class ParkingSystem {
             System.out.println("Queue is full!");
         }
     }
-    public static void LoadVehicle(Scanner sc, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
+    public static void LoadVehicle(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
         if (queue.isEmpty()) {
             System.out.println("Queue is empty.");
             return;
@@ -114,7 +114,7 @@ public class ParkingSystem {
             parkingStack<Vehicle> tempS = new parkingStack<>(CAPACITY, i);
 
             while(!currentLift.isEmpty()){
-            Vehicle v = (Vehicle) currentLift.pop();
+                Vehicle v = (Vehicle) currentLift.pop();
 
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
                     v.setExitTime(LocalDateTime.now());
@@ -134,22 +134,28 @@ public class ParkingSystem {
             parkingQueue<Vehicle> tempQ = new parkingQueue<>(CAPACITY);
             while(!queue.getQueue().isEmpty()){
                 Vehicle v = (Vehicle) queue.dequeue();
+                
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Queue" );
                     Ticket t = new Ticket();
                     t.generateTicket(v, false);
-                }
+                    found = true;
+                    break;
+                }else{ tempQ.enqueue(v); }
                 System.out.println("Vehicle not found.");
             }
-        } 
+            while(!tempQ.isEmpty()){
+                queue.enqueue(tempQ.dequeue());
+            }
+        }
     }
-    public static void History(){
-
+    public static void VehicleHistory(){
+        
         return;
     }
 
-    public static void visualiser(){
+    public static void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){
         //Header
         System.out.print("   Queue      |     ");
         for (int l = 1; l <= LIFTNUM; l++){
@@ -205,7 +211,7 @@ public class ParkingSystem {
         System.out.print("]");
     }
 
-    public static void waitForKey(){
+    public static void waitForKey(Scanner sc){
         System.out.print("\nPress ENTER to continue...");
         sc.nextLine();
     }

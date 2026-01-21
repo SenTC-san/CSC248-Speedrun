@@ -44,7 +44,7 @@ public class Vehicle {
         double total = (parkingDuration() / 60) * ParkingSystem.RATEPERHOUR;
         return total;
     }
-    public static String toFileWrite(Vehicle v){
+/*    public static String toFileWrite(Vehicle v){
         return  v.getVehicleID() + ";" +
                 v.getPlateNumber() + ";" +
                 v.getExitTime() + ";" +
@@ -54,6 +54,6 @@ public class Vehicle {
                 t.getRecipient() + ";" +
                 t.getInvoiceNum() + ";" +
                 t.getDate().format(formatter) + "\n" ;
-    }
+    } */
 }
 
