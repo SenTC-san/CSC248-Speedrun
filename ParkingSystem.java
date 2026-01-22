@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -8,14 +7,14 @@ public class ParkingSystem {
     public static void main(String [] args){
 
         //---------------------------------------------------------
-        //quick program changes data : name, capacity, payment rate
+        //quick program data changes : lot name, capacity, lift num, payment rate
         String PARKINGNAME = "King Centre parking";
-        int CAPACITY = 3;
-        int LIFTNUM = 3;
+        int CAPACITY = 6;
+        int LIFTNUM = 4;
         double RATEPERHOUR = 4.0;
         //----------------------------------------------------------
 
-        Object[] data = {PARKINGNAME, CAPACITY, CAPACITY, RATEPERHOUR};
+        Object[] data = {PARKINGNAME, CAPACITY, LIFTNUM, RATEPERHOUR};
         DataProcessor dp = new DataProcessor(data);
 
         Scanner sc = new Scanner(System.in);
@@ -30,17 +29,12 @@ public class ParkingSystem {
             lifts[i] = new parkingStack<>(CAPACITY, i + 1);
         }
 
-        startSystem(sc, historyList, queue, lifts, dp);
-    }
-
-    public static void startSystem(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int selection;
         boolean valid;
-        String PARKINGNAME = (String) dp.dataAtIndex(0);
         do{ 
             System.out.println("\tWelcome to " + PARKINGNAME);
             //System.out.println("Parking Lot:");
-            visualiser(queue, lifts, dp);
+            v.visualiser(queue, lifts, dp);
             String menu = """
                     \n========== MAIN MENU ==========
                     1. Register Vehicle
@@ -89,8 +83,8 @@ public class ParkingSystem {
                        System.out.println("Invalid Option!");
                        break;
             }
-            waitForKey(sc);
-            clearScreen();
+            dp.waitForKey(sc);
+            dp.clearScreen();
         }while (valid);
     }
 
@@ -190,11 +184,13 @@ public class ParkingSystem {
                     v.toFileWrite(r); //file io process
                     break;
                 }else{ tempQ.enqueue(v); }
-                System.out.println("Vehicle not found.");
             }
             while(!tempQ.isEmpty()){
                 queue.enqueue(tempQ.dequeue());
             }
+        }
+        if(!found){
+            System.out.println("Vehicle not found.");
         }
     }
 
@@ -209,6 +205,7 @@ public class ParkingSystem {
         } 
     }
 
+    //Operation 5: View Lot Details
     public static void LotDetails(LinkedList <Receipt> historyList){
         Vehicle v = new Vehicle();
         historyList = v.toFileRead();
@@ -257,79 +254,5 @@ public class ParkingSystem {
         System.out.printf("Zero-Cost Parking Fee: %-15d%n", zcParking);
         System.out.printf("Peak Hour            : %02d:00 - %02d:59%n", startHour, endHour);
         System.out.printf("=====================================%n");
-    }
-
-    public static void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
-        int LIFTNUM = (int) dp.dataAtIndex(2);
-        int CAPACITY = (int) dp.dataAtIndex(1);
-        //Header
-        System.out.print("   Queue      |     ");
-        for (int l = 1; l <= LIFTNUM; l++){
-            System.out.printf("Lift %-7d ", l);
-        }
-        System.out.println();
-
-        //Rows
-        for(int r=0; r<CAPACITY; r++){
-
-            //Queue column
-            if(r < queue.getQueue().size()){
-                Vehicle v = (Vehicle) queue.getQueue().get(r);
-                printSlot(v.getPlateNumber(), 10);
-            } else
-                printSlot("",10);
-            System.out.print("  |  ");
-        
-            //Lifts
-            for(int l=0; l<LIFTNUM; l++){
-                LinkedList<Vehicle> slist = lifts[l].getStack();
-                int indexFromTop = slist.size() - 1 - r; 
-                if(indexFromTop >= 0 && indexFromTop < slist.size()){
-                    Vehicle v = slist.get(indexFromTop);
-                    printSlot(v.getPlateNumber(), 10);
-                } else
-                    printSlot("",10);
-                System.out.print(" ");
-            }
-            System.out.println();
-        }
-    }
-
-    public static void printSlot(String text, int slotWidth){
-        if(text.length() > slotWidth){
-            text = text.substring(0, slotWidth);
-        }
-
-        int totalSpace = slotWidth - text.length();
-        int leftSpace = totalSpace / 2;
-        int rightSpace = totalSpace - leftSpace;
-
-        System.out.print("[");
-        for (int i = 0; i < leftSpace; i++) {
-            System.out.print(" ");
-        }
-
-        System.out.print(text);
-
-        for (int i = 0; i < rightSpace; i++) {
-            System.out.print(" ");
-        }
-        System.out.print("]");
-    }
-
-    public static void waitForKey(Scanner sc){
-        System.out.print("\nPress ENTER to continue...");
-        sc.nextLine();
-    }
-    // Sadia. (2011, February 2). How to clear the console using Java? Stack Overflow. https://stackoverflow.com/questions/2979383/how-to-clear-the-console-using-java/
-    public static void clearScreen() { //apparently the previous clear screen does not work with windows cmd prompt, this one works with any
-    try {
-        if (System.getProperty("os.name").contains("Windows")) {
-            new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
-        }
-        else {
-            System.out.print("\033\143");
-        }
-        } catch (IOException | InterruptedException ex) {}
     }
 }

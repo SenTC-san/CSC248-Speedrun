@@ -105,5 +105,63 @@ public class Vehicle {
         }
         return reader;
     }
+
+    public void visualiser(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
+        int LIFTNUM = (int) dp.dataAtIndex(2);
+        int CAPACITY = (int) dp.dataAtIndex(1);
+        //Header
+        System.out.print("   Queue      |     ");
+        for (int l = 1; l <= LIFTNUM; l++){
+            System.out.printf("Lift %-7d ", l);
+        }
+        System.out.println();
+
+        //Rows
+        for(int r=0; r<CAPACITY; r++){
+
+            //Queue column
+            if(r < queue.getQueue().size()){
+                Vehicle v = (Vehicle) queue.getQueue().get(r);
+                printSlot(v.getPlateNumber(), 10);
+            } else
+                printSlot("",10);
+            System.out.print("  |  ");
+        
+            //Lifts
+            for(int l=0; l<LIFTNUM; l++){
+                LinkedList<Vehicle> slist = lifts[l].getStack();
+                int indexFromTop = slist.size() - 1 - r; 
+                if(indexFromTop >= 0 && indexFromTop < slist.size()){
+                    Vehicle v = slist.get(indexFromTop);
+                    printSlot(v.getPlateNumber(), 10);
+                } else
+                    printSlot("",10);
+                System.out.print(" ");
+            }
+            System.out.println();
+        }
+    }
+
+    public void printSlot(String text, int slotWidth){
+        if(text.length() > slotWidth){
+            text = text.substring(0, slotWidth);
+        }
+
+        int totalSpace = slotWidth - text.length();
+        int leftSpace = totalSpace / 2;
+        int rightSpace = totalSpace - leftSpace;
+
+        System.out.print("[");
+        for (int i = 0; i < leftSpace; i++) {
+            System.out.print(" ");
+        }
+
+        System.out.print(text);
+
+        for (int i = 0; i < rightSpace; i++) {
+            System.out.print(" ");
+        }
+        System.out.print("]");
+    }
 }
 
