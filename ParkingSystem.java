@@ -91,7 +91,7 @@ public class ParkingSystem {
     //Operation 1: Register Vehicle
     public static void RegisterVehicle(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){ 
         System.out.print("Enter vehicle plate number: ");
-        String plateNum = sc.nextLine().toUpperCase();
+        String plateNum = sc.nextLine().toUpperCase().trim();
 
         int highestID = 1000;
         for(Receipt r :historyList){
@@ -99,6 +99,7 @@ public class ParkingSystem {
                 highestID = r.getVehicle().getVehicleID();
             }
         }
+        highestID++;
         Vehicle v = new Vehicle(highestID, plateNum, LocalDateTime.now() ,null);
 
         if(queue.enqueue(v)){
@@ -139,9 +140,10 @@ public class ParkingSystem {
                 highestID = r.getReceiptID();
             }
         }
-
+    
+        highestID++;
         System.out.print("Enter vehicle plate number: ");
-        String plateNum = sc.nextLine().trim();
+        String plateNum = sc.nextLine().toUpperCase().trim();
         boolean found = false;
 
         for(int i=0; i<LIFTNUM; i++){

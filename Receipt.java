@@ -5,8 +5,7 @@ public class Receipt {
     private Vehicle vehicle;
     private double totalPayment;
     private boolean pay;
-    //static private int nextTicketID = 10000;
-
+    
     public Receipt(){
         receiptID = 10000;
         vehicle = null;
@@ -20,7 +19,7 @@ public class Receipt {
         this.pay = false;
     }
     public Receipt(int receiptID, Vehicle vehicle, double totalPayment, boolean pay){
-        this.receiptID = ++receiptID;
+        this.receiptID = receiptID;
         this.vehicle = vehicle;
         this.totalPayment = totalPayment;
         this.pay = pay;
