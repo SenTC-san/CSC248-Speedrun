@@ -32,8 +32,7 @@ public class ParkingSystem {
         int selection;
         boolean valid;
         do{ 
-            System.out.println("\tWelcome to " + PARKINGNAME);
-            //System.out.println("Parking Lot:");
+            System.out.println("=== Welcome to " + PARKINGNAME + " ===\n");
             v.visualiser(queue, lifts, dp);
             String menu = """
                     \n========== MAIN MENU ==========
@@ -88,18 +87,20 @@ public class ParkingSystem {
         }while (valid);
     }
 
-    //Operation 1: Register Vehicle
+    //Operation 1: Register Vehicle - Adds a new vehicle to the queue waiting to be parked
     public static void RegisterVehicle(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts){ 
         System.out.print("Enter vehicle plate number: ");
         String plateNum = sc.nextLine().toUpperCase().trim();
-
+        
+        // Find the highest vehicle ID in history to generate the next unique ID
         int highestID = 1000;
         for(Receipt r :historyList){
             if(r.getVehicle().getVehicleID() > highestID){
                 highestID = r.getVehicle().getVehicleID();
             }
         }
-        highestID++;
+        highestID++;// Increment to create new ID
+        // Create new vehicle with incremented ID, plate number, and current entry time
         Vehicle v = new Vehicle(highestID, plateNum, LocalDateTime.now() ,null);
 
         if(queue.enqueue(v)){
@@ -109,14 +110,17 @@ public class ParkingSystem {
         }
     }
 
-    //Operation 2: Park Vehicle
+    //Operation 2: Park Vehicle - Moves a vehicle from queue to an available lift
     public static void LoadVehicle(parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int LIFTNUM = (int) dp.dataAtIndex(2);
-
+        
+        // Check if queue has any vehicles
         if (queue.isEmpty()) {
             System.out.println("Queue is empty.");
             return;
         }
+        
+        // Find the first available (not full) lift and move vehicle to it
         for(int i=0; i<LIFTNUM; i++){
             if(!lifts[i].isFull()){
                 Vehicle v = (Vehicle) queue.dequeue();
@@ -128,12 +132,13 @@ public class ParkingSystem {
         System.out.println("All lifts are full.");
     }
 
-    //Operation 3: Unpark Vehicle
+    //Operation 3: Exit Vehicle - Removes a vehicle from parking and generates receipt
     public static void UnloadVehicle(Scanner sc, LinkedList<Receipt> historyList, parkingQueue<Vehicle> queue, parkingStack<Vehicle>[] lifts, DataProcessor dp){
         int LIFTNUM = (int) dp.dataAtIndex(2);
         int CAPACITY = (int) dp.dataAtIndex(1);
         double RATEPERHOUR = (double) dp.dataAtIndex(3);
-
+        
+        // Find highest receipt ID to generate unique receipt ID for this unpark operation
         int highestID = 10000;
         for(Receipt r : historyList){
             if(r.getReceiptID() > highestID){
@@ -141,103 +146,119 @@ public class ParkingSystem {
             }
         }
     
-        highestID++;
+        highestID++; // Increment for new receipt
         System.out.print("Enter vehicle plate number: ");
         String plateNum = sc.nextLine().toUpperCase().trim();
-        boolean found = false;
-
+        boolean found = false; // Track if vehicle was found in parking
+        
+        // Search for vehicle in all lifts
         for(int i=0; i<LIFTNUM; i++){
             parkingStack<Vehicle> currentLift = lifts[i];
+            // Temporary stack to preserve lift order while searching
             parkingStack<Vehicle> tempS = new parkingStack<>(CAPACITY, i);
-
+            
+            // Pop vehicles from lift until we find the target or exhaust the lift
             while(!currentLift.isEmpty()){
                 Vehicle v = (Vehicle) currentLift.pop();
 
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
+                    // Found the vehicle - set exit time and create receipt
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Lift" + (i+1));
                     Receipt r = new Receipt(highestID, v, v.calcTotal(RATEPERHOUR), true);
-                    r.generateReceipt(dp);
+                    r.generateReceipt(dp); // Display receipt to user
                     found = true;
 
-                    v.toFileWrite(r); //file io process
+                    v.toFileWrite(r); // Write transaction to history file
 
                     break;
-                }else{ tempS.push(v); }
+                }else{ tempS.push(v); } // Save non-matching vehicles to restore later
             }
+            // Restore all vehicles back to the lift in original order
             while(!tempS.isEmpty()){
                 currentLift.push(tempS.pop());
             }
             if(found){break; }
         }
+        // If not found in lifts, search in queue
         if(!found){
             parkingQueue<Vehicle> tempQ = new parkingQueue<>(CAPACITY);
             while(!queue.getQueue().isEmpty()){
                 Vehicle v = (Vehicle) queue.dequeue();
                 
                 if(v.getPlateNumber().trim().equalsIgnoreCase(plateNum)){
-                    
+                    // Found in queue - set exit time and create receipt (no payment since vehicle never parked)
                     v.setExitTime(LocalDateTime.now());
                     System.out.println("Vehicle [" + plateNum + "]found in Queue" );
                     Receipt r = new Receipt(highestID, v, v.calcTotal(RATEPERHOUR), false);
                     r.generateReceipt(dp);
                     found = true;
                     
-                    v.toFileWrite(r); //file io process
+                    v.toFileWrite(r); // Write transaction to history file
                     break;
-                }else{ tempQ.enqueue(v); }
+                }else{ tempQ.enqueue(v); } // Save non-matching vehicles
             }
+            // Restore all vehicles back to queue in original order
             while(!tempQ.isEmpty()){
                 queue.enqueue(tempQ.dequeue());
             }
         }
+        // Display error message if vehicle not found anywhere
         if(!found){
             System.out.println("Vehicle not found.");
         }
     }
 
-    //Operation 4: Vehicle History in history text file
+    //Operation 4: Display Vehicle History - Reads and displays all parking transactions from file
     public static void VehicleHistory(LinkedList <Receipt> historyList ){
-        DateTimeFormatter f1 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+        DateTimeFormatter f1 = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"); // Format for displaying date/time in DD/MM/YYYY HH:MM:SS format
         Vehicle v = new Vehicle();
-        historyList = v.toFileRead();
+        historyList = v.toFileRead(); // Load all history records from file
+        // Display each transaction in formatted table(LinkedList <Receipt> historyList ){
         for (Receipt h: historyList){
             System.out.printf("| RECEIPT ID | Vehicle ID | Plate Number |     Entry Time       |      Exit Time       | Total Fee |%n");
             System.out.printf("| %-10d |%-11d | %-12s | %-20s | %-20s | %7.2f   |%n%n" , (h.getReceiptID()-1), (h.getVehicle().getVehicleID()-1), h.getVehicle().getPlateNumber(), f1.format(h.getVehicle().getEntryTime()), f1.format(h.getVehicle().getExitTime()), h.getTotalPayment());
         } 
     }
 
-    //Operation 5: View Lot Details
+    //Operation 5: View Lot Details - Displays parking statistics and analysis
     public static void LotDetails(LinkedList <Receipt> historyList){
         Vehicle v = new Vehicle();
-        historyList = v.toFileRead();
-        int totalReceipt = 0;
-        double totalRevenue = 0.0;
-        double avgRevenue = 0.0;
-        int zcParking = 0;
-        int peakHour = 0;
-        double Duration = 0;
-        double avgDuration = 0;
-        int[] hourCount = new int[24];
-
+        historyList = v.toFileRead();// Load all history records
+        
+        // Initialize variables to track parking statistics
+        int totalReceipt = 0; // Count of completed transactions
+        double totalRevenue = 0.0; // Total money earned
+        double avgRevenue = 0.0; // Average revenue per transaction
+        int zcParking = 0; // Count of zero-cost parkings (time < 1 minute)
+        int peakHour = 0; // Hour with most vehicle entries
+        double Duration = 0; // Total parking duration in minutes
+        double avgDuration = 0; // Average parking duration
+        int[] hourCount = new int[24]; // Count vehicles entering each hour
+        
+        // Calculate statistics from all transactions
         for (Receipt h: historyList){
-            if(h.getReceiptID() > 10000){totalReceipt++; }
-            totalRevenue += h.getTotalPayment();
-            if(!(h.getTotalPayment() > 0.0)){ zcParking++; }
+            if(h.getReceiptID() > 10000){totalReceipt++; } // Only count paid transactions
+            totalRevenue += h.getTotalPayment(); // Sum all payments
+            if(!(h.getTotalPayment() > 0.0)){ zcParking++; } // Count free parkings
             
+            // Track which hour this vehicle entered parking
             int hour = h.getVehicle().getEntryTime().getHour();
             hourCount[hour]++;
-            Duration += h.getVehicle().parkingDuration();
+            Duration += h.getVehicle().parkingDuration(); // Sum total duration
         }
-        //count average revenue
+        // Calculate average revenue per transaction
         if(totalReceipt > 0){ avgRevenue = totalRevenue/totalReceipt; }
-        //count average duration
+        // Calculate average parking duration per vehicle
         if(Duration > 0){ avgDuration = Duration/totalReceipt; }
 
-        //count the peak hour
+
+        // Find the hour with the most vehicle entries (peak hour)
         int maxVehicles = hourCount[0];
         for (int h = 1; h < 24; h++) {
             if (hourCount[h] > maxVehicles) {
+                maxVehicles = hourCount[h];
+                peakHour = h; // Store the peak hour> maxVehicles) {
                 maxVehicles = hourCount[h];
                 peakHour = h;
             }
