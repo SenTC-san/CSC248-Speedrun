@@ -19,7 +19,8 @@ public class ParkingSystem {
 
         Scanner sc = new Scanner(System.in);
         LinkedList<Receipt> historyList = new LinkedList<>();
-        parkingQueue<Vehicle> queue = new parkingQueue(CAPACITY);
+        parkingQueue<Vehicle> queue = new parkingQueue<Vehicle>(CAPACITY);
+        @SuppressWarnings("unchecked")
         parkingStack<Vehicle>[] lifts = new parkingStack[LIFTNUM];
 
         Vehicle v = new Vehicle();
