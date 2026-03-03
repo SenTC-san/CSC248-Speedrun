@@ -1,30 +1,28 @@
 import java.util.LinkedList;
 
-public class parkingStack<Vehicle>{
+public class parkingStack<V>{
 
-    private LinkedList<Vehicle> list;
+    private LinkedList<V> list;
     private int capacity;
-    private int liftNum;
 
     public parkingStack(int capacity, int liftNum){
         list = new LinkedList<>();
         this.capacity = capacity;
-        this.liftNum = liftNum;
     }
 
-    public LinkedList<Vehicle> getStack(){return list; }
+    public LinkedList<V> getStack(){return list; }
 
-    public boolean push(Vehicle vehicle){
+    public boolean push(V vehicle){
         if(list.size() >= capacity){return false; }
 
         list.addFirst(vehicle);
         return true;
     }
-    public Vehicle pop(){
+    public V pop(){
         if(isEmpty()) return null;
         return list.removeFirst();
     }
-    public Vehicle peek(){
+    public V peek(){
         if(isEmpty()) return null;
         return list.getFirst();
     }
